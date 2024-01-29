@@ -15,9 +15,9 @@ namespace Play.Catalog.Service.Extensions
                 CreatedDate = item.createdDate,
             };
         }
-        public static ItemDto AsItemDto(this Item item)
+        public static ItemDto AsItemDto(this Item entity)
         {
-            return new ItemDto(item.Id, item.Name, item.Description, item.Price, item.CreatedDate);
+            return new ItemDto(entity.Id, entity.Name, entity.Description, entity.Price, entity.CreatedDate);
         }
 
         public static List<ItemDto> AsItemsDtos(this IEnumerable<Item> items)
