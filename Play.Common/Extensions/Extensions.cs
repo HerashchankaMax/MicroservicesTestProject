@@ -19,8 +19,8 @@ namespace Play.Common.Extensions
             return services.AddSingleton(provider =>
             {
                 var configuration = provider.GetService<IConfiguration>();
-                var mongoSettings = configuration.GetSection(nameof(MongoDbSettings)).Get<MongoDbSettings>();
                 var serviceSettings = configuration.GetSection(nameof(ServiceSettings)).Get<ServiceSettings>();
+                var mongoSettings = configuration.GetSection(nameof(MongoDbSettings)).Get<MongoDbSettings>();
                 var client = new MongoClient(mongoSettings.ConnectionString);
                 return client.GetDatabase(serviceSettings.ServiceName);
             });
