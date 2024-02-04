@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Reflection;
+using MassTransit;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -34,6 +36,26 @@ namespace Play.Common.Extensions
                 return new MongoRepository<T>(database, databaseName);
             });
 
+        }
+
+        public static IServiceCollection AddRabbitMQ(this IServiceCollection services)
+        {
+            services.AddMassTransit(x =>
+            {
+                x.AddConsumers(Assembly.GetEntryAssembly());
+                x.UsingRabbitMq((context, configurator) =>
+                {
+                    var conf = context.GetService<IConfiguration>();
+                    var serviceSettings = conf.GetSection(nameof(ServiceSettings)).Get<ServiceSettings>();
+                    var rabbitMqSettings = conf.GetSection(nameof(RabbitMQSettings)).Get<RabbitMQSettings>();
+
+                    configurator.Host(rabbitMqSettings.Host);
+                    configurator.ConfigureEndpoints(context,
+                        new KebabCaseEndpointNameFormatter(serviceSettings.ServiceName, false));
+                });
+            });
+            services.AddMassTransitHostedService();
+            return services;
         }
     }
 }

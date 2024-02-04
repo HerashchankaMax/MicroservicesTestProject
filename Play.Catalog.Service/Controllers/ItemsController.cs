@@ -1,7 +1,10 @@
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Play.Catalog.Service.Entities;
 using Play.Catalog.Service.Extensions;
 using Play.Common.Interfaces;
+using Play.Catalog.Contracts;
+
 
 namespace Play.Catalog.Service.Controllers
 {
@@ -11,11 +14,12 @@ namespace Play.Catalog.Service.Controllers
     public class ItemsController : ControllerBase
     {
         private readonly IRepository<Item> _itemsRepository;
+        private readonly IPublishEndpoint _publishEndPoint;
 
-        public ItemsController(IRepository<Item> itemsRepository)
+        public ItemsController(IRepository<Item> itemsRepository, IPublishEndpoint publishEndPoint)
         {
-
             _itemsRepository = itemsRepository;
+            _publishEndPoint = publishEndPoint;
         }
         [HttpGet]
         public async Task<IEnumerable<ItemDto>> GetAsync()
@@ -46,7 +50,7 @@ namespace Play.Catalog.Service.Controllers
                 CreatedDate = DateTimeOffset.UtcNow,
             };
             await _itemsRepository.CreateAsync(item);
-
+            await _publishEndPoint.Publish(new CatalogItemCreated(item.Id, item.Name, item.Description));
             return CreatedAtAction(nameof(GetByIdAsync), new { id = item.Id }, item);
         }
 
@@ -62,6 +66,7 @@ namespace Play.Catalog.Service.Controllers
             existingItem.Description = updateItemDto.description;
             existingItem.Price = updateItemDto.price;
 
+            await _publishEndPoint.Publish(new CatalogItemUpdated(existingItem.Id, existingItem.Name, existingItem.Description));
             await _itemsRepository.UpdateAsync(existingItem);
             return NoContent();
         }
@@ -74,7 +79,8 @@ namespace Play.Catalog.Service.Controllers
             if (existingItem == null)
                 return NotFound();
 
-            _itemsRepository.DeleteASync(existingItem);
+            await _publishEndPoint.Publish(new CatalogItemDeleted(id));
+            await _itemsRepository.DeleteASync(existingItem);
             return NoContent();
         }
 

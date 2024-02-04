@@ -4,9 +4,10 @@ using Play.Common.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
-builder.Services.AddMongo();
 builder.Services.RegisterDatabase<Item>("items");
+builder.Services.AddMongo();
+builder.Services.AddRabbitMQ();
+
 builder.Services.AddControllers(options =>
     options.SuppressAsyncSuffixInActionNames = false);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
